@@ -135,6 +135,13 @@
         </div>
     </div>
 
+    <div class="card text-dark bg-light mb-5 main-console">
+        <div class="card-header">Details</div>
+        <div class="card-body">
+            <pre id="smart-contract-details" style="max-height: 500px;"></pre>
+        </div>
+    </div>
+
     <div class="card text-dark bg-light mb-5 event-console">
         <div class="card-header d-flex justify-content-between">
             <span>Events</span>
@@ -1016,6 +1023,7 @@ const contractDetailsJson = [
 		"type": "function"
 	}
         ],
+        
         "networks": {
             "12345": {
                 "address": "0x0267c20A120EDD732A6F500dFf328C8eD1797CA5"
@@ -1292,7 +1300,10 @@ async function handleSmartContractCall(e) {
             // NOTE: msg.sender is 0x0 on the VIEW methods. The client must set
             // {from: userAddress} when calling the smart contract
             var res = await window.ethExp.call(scFnc, params, contractName, {from: userAddress});
-            UI.consoleSuccess(res);
+            //UI.consoleSuccess(res);
+            UI.show_details(scFnc, res, {});
+
+            
         } 
         // calling a function that is NON PAYABLE
         else if (window.ethExp.methodIsNonPayable(scFnc, contractName)) {
@@ -1584,6 +1595,7 @@ class UI {
      */
     static consoleSuccess(message) {
         UI.console(message, { isSuccess: true });
+        
     }
 
     /**
@@ -1618,6 +1630,186 @@ class UI {
 
         // scrolling the console to the bottom to show the last message
         consoleElem.scrollTop = consoleElem.scrollHeight;
+    }
+
+    static create_table(content, headers){
+        var table = document.createElement('table');
+        table.setAttribute('class', 'table table-striped text-wrap');
+        table.setAttribute('style', 'max-height: 500px;');
+        var header = table.createTHead();
+        var body = table.createTBody();
+        var row = header.insertRow();
+
+        for (var i=0; i<headers.length; i++){
+            var cell = row.insertCell();
+            cell.innerHTML = "<strong>" +headers[i]+ "</strong>";
+        }
+        for (var i = 0; i < content.length; i++){
+                var obj = content[i];
+
+                //console.log(obj)
+                row = body.insertRow()
+                for (var j = 0; j < headers.length; j++){
+                    //console.log(obj[key])
+                    var cell = row.insertCell()
+                    cell.innerHTML = obj[j]
+                }
+        }
+        //tableElem.appendChild(table);
+        return table;
+
+
+    }
+
+    static show_details(type, content, options={}, elementId = 'smart-contract-details')
+    {
+        var tableElem = document.getElementById(elementId);
+        var classes = '';
+        //content = (new Date().toISOString()) + ': ' + content;
+        if (type=='getAllCargo' || type=='getMyCargo'){
+            tableElem.replaceChildren();
+
+
+            var matr = ["AluminaHydrat",
+            "Wheat",
+            "SteelCoils",
+            "FertilizerInBags",
+            "Urea",
+            "NPK",
+            "TSP",
+            "CementClinker",
+            "SteelHotRolledCoils",
+            "Barley",
+            "Lentils"];
+            var data = [];
+            for (var i = 0; i< content.length; i++)
+            {
+                var row = [];
+                row.push(content[i][0], content[i][1], content[i][2], content[i][3], matr[parseInt(content[i][4])], content[i][5], content[i][6] );
+                data.push(row);
+            }
+
+            var headers = ["ID", "Name", "Supplier Name", "Supplier", "Material Type", "Quantity", "Unit"];
+            var table = UI.create_table(data,headers);
+            tableElem.appendChild(table);
+
+        }
+        else if(type=='getMyDetails' || type == 'getUserDetails')
+        {
+            tableElem.replaceChildren();
+            var span = document.createElement('span')
+            span.innerHTML = "<strong>User Type:</strong> "+content['uType']+"<br/>"
+            + "<strong>User ID:</strong> "+content['userId']+"<br/>"
+            + "<strong>Name:</strong> "+content['name']+"<br/>"
+            + "<strong>Email:</strong> "+content['email']+"<br/>"
+            + "<strong>Country:</strong> "+content['country']+"<br/>"
+            tableElem.appendChild(span);
+        }
+        else if(type=='getShipDetails')
+        {
+            tableElem.replaceChildren();
+            var span = document.createElement('span')
+            span.innerHTML = "<strong>User Type:</strong> "+content[0]['uType']+"<br/>"
+            + "<strong>User ID:</strong> "+content[0]['userId']+"<br/>"
+            + "<strong>Name:</strong> "+content[0]['name']+"<br/>"
+            + "<strong>Email:</strong> "+content[0]['email']+"<br/>"
+            + "<strong>Country:</strong> "+content[0]['country']+"<br/>"
+            tableElem.appendChild(span);
+
+        }
+        else if(type=='getSingleCargo')
+        {
+            var matr = ["AluminaHydrat",
+            "Wheat",
+            "SteelCoils",
+            "FertilizerInBags",
+            "Urea",
+            "NPK",
+            "TSP",
+            "CementClinker",
+            "SteelHotRolledCoils",
+            "Barley",
+            "Lentils"];
+            tableElem.replaceChildren();
+            var span = document.createElement('span')
+            span.innerHTML = "<strong>Cargo ID:</strong> "+content[0]['id']+"<br/>"
+            + "<strong>Material Type: </strong> "+matr[parseInt(content[0]['mType'])]+"<br/>"
+            + "<strong>Name:</strong> "+content[0]['name']+"<br/>"
+            + "<strong>Quantity:</strong> "+content[0]['qty']+"<br/>"
+            + "<strong>Supplier:</strong> "+content[0]['supplierName']+"<br/>"
+            + "<strong>Unit:</strong> "+content[0]['unit']+"<br/>"
+            tableElem.appendChild(span);
+
+        }
+        else if(type=='getShipDetailsHumanReadable')
+        {
+            tableElem.replaceChildren();
+            var data_trans = [];
+            var portNames = content['portName'];
+            var portStatus = content['portStatus'];
+            var portTime = content['portTime'];
+
+            for (var i=0; i<portNames.length; i++)
+            {
+                var row = [];
+                row.push(portNames[i], new Date(parseInt(portTime[i])*1000), portStatus[i])
+                data_trans.push(row)
+
+            }
+            var table = UI.create_table(data_trans,['Port', 'Time', 'Status'])
+            tableElem.appendChild(table);
+
+        }
+        else if(type=='geyMyShipDetailsHumanReadable')
+        {
+            tableElem.replaceChildren();
+            var data_trans = [];
+            var portNames = content[1];
+            var portStatus = content[3];
+            var portTime = content[2];
+
+            for (var i=0; i<portNames.length; i++)
+            {
+                var row = [];
+                row.push(portNames[i], new Date(parseInt(portTime[i])*1000), portStatus[i])
+                data_trans.push(row)
+
+            }
+            var table = UI.create_table(data_trans,['Port', 'Time', 'Status'])
+            tableElem.appendChild(table);
+
+        }
+        else if(type=='getSingleCargoHumanReadable')
+        {
+            tableElem.replaceChildren();
+            var span = document.createElement('span')
+            span.innerHTML = "<strong>Material Type:</strong> "+content['MaterialType']+"<br/>"
+            + "<strong>Material:</strong> "+content['MaterialName']+"<br/>"
+            + "<strong>Sender:</strong> "+content['SenderName']+"<br/><br/><br/>";
+            tableElem.appendChild(span);
+            var data = []
+            for (var i=0; i<content['portName'].length; i++)
+            {
+                var row = [];
+                row.push(content['portName'][i], new Date(parseInt(content['portTime'][i])*1000), content['shipName'][i], new Date(parseInt(content['shipTime'][i])*1000));
+                data.push(row)
+
+            }
+            var headers = ["Port", "Port Time", "Ship", "Ship Time"];
+            var table = UI.create_table(data,headers);
+            tableElem.appendChild(table);
+            
+            
+
+        }
+        else{
+            tableElem.replaceChildren();
+            console.log(content)
+
+        }
+        
+
+        //tableElem.innerHTML += `<p class="m-0 pt-0 pb-2 ${classes}">${content}</p>`;
     }
 
     /**
