@@ -1,0 +1,32 @@
+=============== Dec 28, 2022 (UTC) ===============
+11:39:46.027106 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+11:39:46.072065 db@open opening
+11:39:46.073803 version@stat F·[] S·0B[] Sc·[]
+11:39:46.089619 db@janitor F·2 G·0
+11:39:46.089736 db@open done T·17.465345ms
+11:39:46.303785 db@close closing
+11:39:46.304434 db@close done T·647.783µs
+=============== Dec 28, 2022 (UTC) ===============
+12:05:27.193760 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:05:27.196730 version@stat F·[] S·0B[] Sc·[]
+12:05:27.196987 db@open opening
+12:05:27.197626 journal@recovery F·1
+12:05:27.198689 journal@recovery recovering @1
+12:05:27.227781 memdb@flush created L0@2 N·121 S·12KiB "\b\x93\xe1..\xf8\x103,v59":"\xffi\xb1..\xf0\xc5\\,v99"
+12:05:27.229760 version@stat F·[1] S·12KiB[12KiB] Sc·[0.25]
+12:05:27.287553 db@janitor F·3 G·0
+12:05:27.287676 db@open done T·90.607196ms
+12:05:27.320455 db@close closing
+12:05:27.321307 db@close done T·850.296µs
+=============== Dec 28, 2022 (UTC) ===============
+12:11:29.750263 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:11:29.752795 version@stat F·[1] S·12KiB[12KiB] Sc·[0.25]
+12:11:29.753046 db@open opening
+12:11:29.753639 journal@recovery F·1
+12:11:29.754227 journal@recovery recovering @3
+12:11:29.834072 memdb@flush created L0@5 N·1 S·343B "eth..d\xf3\xee,v123":"eth..d\xf3\xee,v123"
+12:11:29.836275 version@stat F·[2] S·12KiB[12KiB] Sc·[0.50]
+12:11:29.894693 db@janitor F·4 G·0
+12:11:29.894872 db@open done T·141.744034ms
+12:11:29.925040 db@close closing
+12:11:29.925801 db@close done T·760.146µs
