@@ -1239,13 +1239,17 @@ function loadEventsFromSmartContracts(fromBlockNumber) {
         window.ethExp.contract(contractName).events.allEvents({
             fromBlock: fromBlockNumber
         }, function(error, event) { 
-            UI.eventsConsoleError(event);
+            //UI.eventsConsoleError(event);
         })
         .on("connected", function(subscriptionId){
             UI.eventsConsoleSuccess({ on:'connected', subscriptionId });
         })
         .on('data', function(event){
-            UI.eventsConsole({ on:'data', event }); // same results as the optional callback above
+            //UI.eventsConsole({ on:'data', event }); // same results as the optional callback above
+            processEvent(event)
+            console.log(event.blockNumber);
+            
+            
         })
         .on('changed', function(event){
             UI.eventsConsole({ on:'changed', event });
@@ -1260,6 +1264,95 @@ function loadEventsFromSmartContracts(fromBlockNumber) {
         });
     }
 }
+
+async function processEvent(event) {
+    var block = window.ethExp.web3.eth.getBlock(event.blockNumber);
+    var ts = await block;
+    
+    console.log(ts.timestamp)
+    
+    dt = new Date(ts.timestamp*1000)
+    if(event.event == "MaterialTransfer")
+    {
+         UI.eventsConsole("Material with the id '"+event.returnValues.id+"', named '"+event.returnValues.name+"' was transfered to user: '"+event.returnValues.newOwnName+"'. The event was emitted at: "+dt.toISOString());
+    } else if (event.event == "NewMaterial")
+    {
+        UI.eventsConsole("Material with the id '"+event.returnValues.id+"', named '"+event.returnValues.name+"' was added to the system by the supplier: '"+event.returnValues.supplierName+"'. The event was emitted at: "+dt.toISOString());
+    } else if (event.event == "UserCreated")
+    {
+        var type = ''
+        switch (event.returnValues.userType) {
+            case '0':
+                type='Supplier';
+                break;
+           case '1':
+                type='Port Authority';
+                break;
+           case '2':
+                type='Ship';
+                break;          
+           case '3':
+                type='Distributer';
+                break;
+           case '4':
+                type='Administrator';
+                break;     
+        }
+        UI.eventsConsole("User named '"+event.returnValues.name+"', with e-mail address: '"+event.returnValues.email+"' of type: '"+type+"' was added to the system. The event was emitted at: "+dt.toISOString());
+    } else if (event.event == "UserRemoved")
+    {
+        var type = ''
+        switch (event.returnValues.userType) {
+            case '0':
+                type='Supplier';
+                break;
+           case '1':
+                type='Port Authority';
+                break;
+           case '2':
+                type='Ship';
+                break;          
+           case '3':
+                type='Distributer';
+                break;
+           case '4':
+                type='Administrator';
+                break;     
+        }
+        UI.eventsConsole("User named '"+event.returnValues.name+"', with e-mail address: '"+event.returnValues.email+"' of type: '"+type+"' was removed from the system. The event was emitted at: "+dt.toISOString());
+    } else if (event.event == "ShipStatusChanged")
+    {
+        var type = ''
+        switch (event.returnValues.status) {
+            case '0':
+                type='Arrival';
+                break;
+           case '1':
+                type='Arrival/Anchored';
+                break;
+           case '2':
+                type='Berthed';
+                break;          
+           case '3':
+                type='Anchored';
+                break;
+           case '4':
+                type='Departure';
+                break;     
+           case '5':
+                type='Bunkering';
+                break;
+          case '6':
+                type='Underwater cleaning';
+                break;    
+                
+        }
+        UI.eventsConsole("Ship '"+event.returnValues.shipName+"' change its location to: Port '"+event.returnValues.portName+"' with the status: '"+type+"'. The event was emitted at: "+dt.toISOString());
+    }
+    
+    
+}
+
 
 /**
  * Handle the call to a smart contract function submitted in a form.
@@ -1394,6 +1487,41 @@ function addContractToDashboard(contract, active=false) {
  * @param   {string}  contractName      The name of the smart contract.
  * @param   {Object}  abiItem           Smart contract's ABI.
  */
+ 
+function processFName(name) {
+
+    switch(name) {
+    case "addCargo":
+        return "Add new cargo to the system";
+    case "addNewUser":
+        return "Add new user to the system";
+    case "changeShipPortStatus":
+        return "Change ship port status";
+    case "trasferCargo":
+        return "Transfer cargo from user to user";
+    case "getAllCargo":
+        return "List every cargo in the system";
+    case "getMyCargo":
+        return "List every cargo belonging to current user";
+    case "getMyDetails":
+        return "Return the data related to current user";
+    case "getShipDetails":
+        return "Return the data related to specific ship";
+    case "getShipDetailsHumanReadable":
+        return "Return the port history of the ship";
+    case "getSingleCargo":
+        return "Return the data related to specific cargo";
+    case "getSingleCargoHumanReadable":
+        return "Return the history of the specific cargo";
+    case "getUserDetails":
+        return "Return the data related to specific user";
+    case "geyMyShipDetailsHumanReadable":
+        return "Return the port history of the ship that is the current user";
+    }    
+    return name;
+
+
+}
 function addFncToDashboard(contractName, abiItem) {
     var formId = 'sm_' + contractName + '_' + abiItem.name;
 
@@ -1401,7 +1529,8 @@ function addFncToDashboard(contractName, abiItem) {
     // The option element has as value the Form ID and as label the function name
     var opt = document.createElement('option');
     opt.value = formId; // value of the select's option
-    opt.innerHTML = abiItem.name; // label of the select's option
+//    opt.innerHTML = abiItem.name; // label of the select's option
+    opt.innerHTML = processFName(abiItem.name); // label of the select's option
     // adding the option to the select
     document.getElementById('smFunctions-' + contractName).appendChild(opt);
 
@@ -1864,29 +1993,8 @@ class EthereumExplorer {
      * Initialize Web3.js
      */
     async bootWeb3() {
-        var web3Provider = null;
-    
-        // Modern dapp browsers...
-        if (window.ethereum) {
-            web3Provider = window.ethereum;
-
-            try {
-                // Request account access
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-            } catch (error) {
-                // User denied account access...
-                throw error;
-            }
-        } else if (window.web3) {
-            // Legacy dapp browsers...
-            web3Provider = window.web3.currentProvider;
-        } else {
-            // If no injected web3 instance is detected, fall back to Ganache
-            web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
-        }
-        
-        this.web3 = new Web3(web3Provider);
-        this.web3 = new Web3("http://localhost:8545");
+     
+        this.web3 = new Web3("ws://localhost:8546");
     }
 
     /**
